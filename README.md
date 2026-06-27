@@ -4,9 +4,9 @@
   <img src="src-tauri/icons/icon.png" width="120" alt="Truefiles OS icon" />
 </p>
 
-A visual rsync manager for Linux — built as a native desktop app with Tauri v2, React, and Rust.
+**Truefiles OS** es un gestor de archivos para Linux enfocado en backups y organización, que reúne en una sola app de escritorio todo lo que normalmente requiere terminal o múltiples herramientas sueltas.
 
-Designed for people who manage backups between local drives and remote servers, and want full control without memorizing rsync flags.
+Sincronización rsync con panel dual (local ↔ local o local ↔ SSH), etiquetado semántico de archivos vía xattr, detección de duplicados por hash, visor de archivos integrado, programador de backups con cron visual, snapshots del sistema con Timeshift, historial de sincronizaciones y gestión de perfiles SSH.
 
 ---
 
