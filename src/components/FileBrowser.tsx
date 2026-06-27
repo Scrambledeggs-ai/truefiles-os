@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Folder, File, HardDrive, ArrowUp, Wifi, Monitor, Tag, Plus, Eye } from "lucide-react";
+import { Folder, File, HardDrive, ArrowUp, Wifi, Monitor, Tag, Eye } from "lucide-react";
 import type { FileEntry, DiskInfo, SshProfile, PaneState } from "../lib/types";
 import { formatBytes, formatDate } from "../lib/utils";
 import { TagChip } from "./TagChip";
 import { FileViewer } from "./FileViewer";
+import { TagInlineEditor } from "./TagInlineEditor";
 
 interface Props {
   label: string;
@@ -18,11 +19,18 @@ export function FileBrowser({ label, pane, profiles, onPaneChange }: Props) {
   const [disk, setDisk]         = useState<DiskInfo | null>(null);
   const [error, setError]       = useState<string | null>(null);
   const [selected, setSelected] = useState<FileEntry | null>(null);
-  const [tagInput, setTagInput]   = useState("");
+  const [existingTags, setExistingTags] = useState<{ tag: string }[]>([]);
   const [savingTag, setSavingTag] = useState(false);
+  const [addingTag, setAddingTag] = useState(false);
   const [viewingFile, setViewingFile] = useState<string | null>(null);
 
   const isSSH = pane.mode === "ssh" && pane.profileId !== null;
+
+  useEffect(() => {
+    if (pane.mode === "local") {
+      invoke<{ tag: string }[]>("list_all_tags").then(setExistingTags).catch(() => null);
+    }
+  }, [pane.mode]);
 
   useEffect(() => {
     setError(null);
@@ -52,8 +60,7 @@ export function FileBrowser({ label, pane, profiles, onPaneChange }: Props) {
     onPaneChange({ path: parent });
   }
 
-  async function addTag() {
-    const tag = tagInput.trim().toLowerCase().replace(/\s+/g, "-");
+  async function addTag(tag: string) {
     if (!tag || !selected || selected.tags.includes(tag)) return;
     setSavingTag(true);
     const newTags = [...selected.tags, tag];
@@ -62,7 +69,7 @@ export function FileBrowser({ label, pane, profiles, onPaneChange }: Props) {
       const updated = { ...selected, tags: newTags };
       setSelected(updated);
       setEntries((prev) => prev.map((e) => e.path === selected.path ? updated : e));
-      setTagInput("");
+      setExistingTags((prev) => prev.find((t) => t.tag === tag) ? prev : [...prev, { tag }]);
     } finally {
       setSavingTag(false);
     }
@@ -211,18 +218,22 @@ export function FileBrowser({ label, pane, profiles, onPaneChange }: Props) {
               <TagChip key={t} tag={t} onRemove={() => removeTag(t)} />
             ))}
           </div>
-          <div className="flex gap-1.5">
-            <input
-              placeholder="Agregar tag..."
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addTag()}
-              className="flex-1 bg-[#1e1e1e] border border-[#3a3a3a] rounded px-2 py-1 text-[11px] text-[#e5e7eb] outline-none focus:border-[#3b82f6]"
-            />
-            <button onClick={addTag} disabled={!tagInput.trim() || savingTag}
-              className="flex items-center gap-1 px-2 py-1 rounded text-[11px] bg-[#262626] border border-[#3a3a3a] text-[#9ca3af] hover:text-white disabled:opacity-40 transition-colors">
-              <Plus size={10} />
-            </button>
+          <div className="flex gap-1.5 items-center">
+            {addingTag ? (
+              <TagInlineEditor
+                existingTags={existingTags}
+                currentTags={selected!.tags}
+                onAdd={addTag}
+                onClose={() => setAddingTag(false)}
+              />
+            ) : (
+              <button
+                onClick={() => setAddingTag(true)}
+                disabled={savingTag}
+                className="flex items-center gap-1 px-2 py-1 rounded text-[11px] bg-[#262626] border border-[#3a3a3a] text-[#9ca3af] hover:text-white disabled:opacity-40 transition-colors">
+                <Tag size={10} /> Agregar tag
+              </button>
+            )}
           </div>
         </div>
       )}
