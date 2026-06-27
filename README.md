@@ -1,5 +1,9 @@
 # Truefiles OS
 
+<p align="center">
+  <img src="src-tauri/icons/icon.png" width="120" alt="Truefiles OS icon" />
+</p>
+
 A visual rsync manager for Linux — built as a native desktop app with Tauri v2, React, and Rust.
 
 Designed for people who manage backups between local drives and remote servers, and want full control without memorizing rsync flags.
